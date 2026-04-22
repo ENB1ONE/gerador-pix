@@ -243,21 +243,33 @@ document.addEventListener('DOMContentLoaded', () => {
      * Gera o Payload final do Pix
      */
     function generatePayload() {
+        const type = keyTypeInput.value;
         let key = pixKeyInput.value.trim();
         const value = parseCurrency(pixValueInput.value) + parseCurrency(pixFeeInput.value);
-        const identifier = identifierInput.value.trim() || '***';
+        let identifier = identifierInput.value.trim();
 
-        // Phone specific formatting: add +55 if it looks like a BR number
-        if (keyTypeInput.value === 'PHONE') {
-            const cleanKey = key.replace(/\D/g, '');
-            if (cleanKey.length >= 10 && !key.startsWith('+')) {
-                key = `+55${cleanKey}`;
-            } else if (key.startsWith('55') && !key.startsWith('+')) {
-                key = `+${key}`;
+        // 1. Sanitize Key
+        if (type === 'CPF' || type === 'PHONE') {
+            key = key.replace(/\D/g, ''); // Keep only digits
+            if (type === 'PHONE' && key.length >= 10 && !key.startsWith('55')) {
+                key = `55${key}`; // Add 55 for Brazil if missing (but no + sign for some banks)
             }
         }
         
-        // 00: Payload Format Indicator (Fixed)
+        // Note: For some banks, PHONE key in payload should NOT have the '+' prefix.
+        // The earlier example had +55, but let's try ensuring the key field is clean.
+        if (type === 'PHONE' && !key.startsWith('+')) {
+            key = `+${key}`;
+        }
+
+        // 2. Sanitize Identifier (TXID) - Must be Alphanumeric [A-Z0-9]
+        // If empty, use '***' as per standard for static codes
+        identifier = identifier.replace(/[^A-Z0-9]/gi, '').toUpperCase() || '***';
+        if (identifier.length > 25) identifier = identifier.substring(0, 25);
+
+        // --- Build Payload ---
+        
+        // 00: Payload Format Indicator
         let payload = formatTLV('00', '01');
 
         // 26: Merchant Account Information
@@ -286,11 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
         payload += formatTLV('60', 'C');
 
         // 62: Additional Data Field Template
-        const txid = formatTLV('05', identifier.replace(/\s+/g, '').toUpperCase()); 
+        const txid = formatTLV('05', identifier); 
         payload += formatTLV('62', txid);
 
         // 63: CRC16
-        payload += '6304'; // Tag + Length header
+        payload += '6304';
         payload += getCRC16(payload);
 
         return payload;
