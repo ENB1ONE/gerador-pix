@@ -425,12 +425,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // Register Service Worker
+    // Register Service Worker and handle updates
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW Registered'))
-                .catch(err => console.log('SW Registration Failed', err));
+            navigator.serviceWorker.register('./sw.js').then(reg => {
+                // Check for updates periodically
+                setInterval(() => {
+                    reg.update();
+                }, 1000 * 60 * 60); // Check every hour
+
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New content is available; please refresh.
+                            // Since we use skipWaiting(), we can just reload
+                            window.location.reload();
+                        }
+                    });
+                });
+            }).catch(err => console.log('SW Registration Failed', err));
+        });
+
+        // Ensure refreshing the page with the new service worker
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
         });
     }
 
