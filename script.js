@@ -42,16 +42,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Currency Mask Logic
+    const formatCurrency = (input) => {
+        let value = input.value.replace(/\D/g, '');
+        value = (value / 100).toFixed(2) + '';
+        value = value.replace(".", ",");
+        value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        input.value = value;
+    };
+
+    const parseCurrency = (value) => {
+        if (!value) return 0;
+        return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+    };
+
     // Dynamic Total Calculation
     const updateTotal = () => {
-        const val = parseFloat(pixValueInput.value) || 0;
-        const fee = parseFloat(pixFeeInput.value) || 0;
+        const val = parseCurrency(pixValueInput.value);
+        const fee = parseCurrency(pixFeeInput.value);
         const total = val + fee;
         totalDisplay.textContent = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-    pixValueInput.addEventListener('input', updateTotal);
-    pixFeeInput.addEventListener('input', updateTotal);
+    pixValueInput.addEventListener('input', (e) => {
+        formatCurrency(e.target);
+        updateTotal();
+    });
+
+    pixFeeInput.addEventListener('input', (e) => {
+        formatCurrency(e.target);
+        updateTotal();
+    });
 
     // --- 2. Pix Engine (BR Code / EMV Co) ---
 
@@ -88,15 +109,25 @@ document.addEventListener('DOMContentLoaded', () => {
      * Gera o Payload final do Pix
      */
     function generatePayload() {
-        const key = pixKeyInput.value.trim();
-        const value = (parseFloat(pixValueInput.value) || 0) + (parseFloat(pixFeeInput.value) || 0);
+        let key = pixKeyInput.value.trim();
+        const value = parseCurrency(pixValueInput.value) + parseCurrency(pixFeeInput.value);
         const identifier = identifierInput.value.trim() || '***';
+
+        // Phone specific formatting: add +55 if it looks like a BR number
+        if (keyTypeInput.value === 'PHONE') {
+            const cleanKey = key.replace(/\D/g, '');
+            if (cleanKey.length >= 10 && !key.startsWith('+')) {
+                key = `+55${cleanKey}`;
+            } else if (key.startsWith('55') && !key.startsWith('+')) {
+                key = `+${key}`;
+            }
+        }
         
         // 00: Payload Format Indicator (Fixed)
         let payload = formatTLV('00', '01');
 
         // 26: Merchant Account Information
-        const gui = formatTLV('00', 'br.gov.bcb.pix');
+        const gui = formatTLV('00', 'BR.GOV.BCB.PIX');
         const keyField = formatTLV('01', key);
         payload += formatTLV('26', gui + keyField);
 
@@ -115,13 +146,13 @@ document.addEventListener('DOMContentLoaded', () => {
         payload += formatTLV('58', 'BR');
 
         // 59: Merchant Name
-        payload += formatTLV('59', 'RECEBEDOR');
+        payload += formatTLV('59', 'N');
 
         // 60: Merchant City
-        payload += formatTLV('60', 'SAO PAULO');
+        payload += formatTLV('60', 'C');
 
         // 62: Additional Data Field Template
-        const txid = formatTLV('05', identifier.replace(/\s+/g, '')); // Remove spaces for TXID
+        const txid = formatTLV('05', identifier.replace(/\s+/g, '').toUpperCase()); 
         payload += formatTLV('62', txid);
 
         // 63: CRC16
