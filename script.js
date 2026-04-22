@@ -45,10 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set keyboard type
             if (btn.dataset.type === 'CPF' || btn.dataset.type === 'PHONE') {
                 pixKeyInput.setAttribute('inputmode', 'numeric');
+                pixKeyInput.setAttribute('pattern', '[0-9]*');
             } else if (btn.dataset.type === 'EMAIL') {
                 pixKeyInput.setAttribute('inputmode', 'email');
+                pixKeyInput.removeAttribute('pattern');
             } else {
                 pixKeyInput.setAttribute('inputmode', 'text');
+                pixKeyInput.removeAttribute('pattern');
             }
 
             validateKey(); // Re-validate when switching types
