@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pix-generator-v1.1'; // Update this to force refresh
+const CACHE_NAME = 'pix-generator-v1.2'; // Update this to force refresh
 const ASSETS = [
   './',
   './index.html',

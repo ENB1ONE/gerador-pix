@@ -1,6 +1,6 @@
 {
-  "name": "Gerador de Pix",
-  "short_name": "Pix",
+  "name": "GERADOR DE PIX",
+  "short_name": "PIX",
   "description": "Gerador de QR Code Pix Minimalista",
   "start_url": "./index.html",
   "display": "standalone",
