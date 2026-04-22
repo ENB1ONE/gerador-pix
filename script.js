@@ -32,14 +32,25 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
             keyTypeInput.value = btn.dataset.type;
             
-            // Adjust placeholder based on type
+            // Adjust placeholder and keyboard based on type
             const placeholders = {
                 'CPF': '000.000.000-00',
                 'EMAIL': 'seu@email.com',
                 'PHONE': '+55 (11) 99999-9999', // Celular
                 'RANDOM': 'Chave de 32 caracteres'
             };
+            
             pixKeyInput.placeholder = placeholders[btn.dataset.type] || 'Insira sua chave';
+            
+            // Set keyboard type
+            if (btn.dataset.type === 'CPF' || btn.dataset.type === 'PHONE') {
+                pixKeyInput.setAttribute('inputmode', 'numeric');
+            } else if (btn.dataset.type === 'EMAIL') {
+                pixKeyInput.setAttribute('inputmode', 'email');
+            } else {
+                pixKeyInput.setAttribute('inputmode', 'text');
+            }
+
             validateKey(); // Re-validate when switching types
         });
     });
