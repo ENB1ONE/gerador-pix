@@ -88,7 +88,7 @@
 
         <!-- Resultados -->
         <div id="result-section" class="hidden mt-8 pt-8 border-t border-[#F5F5F7] space-y-6 animate-fade-in">
-            <div class="flex flex-col items-center">
+            <div id="qr-wrapper" class="flex flex-col items-center">
                 <div id="qrcode" class="p-4 bg-white border border-[#E8E8ED] rounded-2xl"></div>
                 <p class="text-[10px] text-[#86868B] mt-2 uppercase tracking-widest font-medium">Aponte a câmera para pagar</p>
             </div>
@@ -101,6 +101,9 @@
                 <button id="btn-copy-result" class="apple-btn-secondary w-full flex items-center justify-center gap-2">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     <span id="copy-text">Copiar Pix Copia e Cola</span>
+                </button>
+                <button id="btn-reset" class="text-xs text-[#86868B] font-medium hover:text-[#1D1D1F] transition-colors py-2 uppercase tracking-widest text-center mt-2">
+                    Gerar novo Pix
                 </button>
             </div>
         </div>

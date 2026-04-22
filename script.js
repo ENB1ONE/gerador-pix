@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCopyResult = document.getElementById('btn-copy-result');
     const copyText = document.getElementById('copy-text');
     const keyError = document.getElementById('key-error');
+    const btnReset = document.getElementById('btn-reset');
+    const qrWrapper = document.getElementById('qr-wrapper');
 
     let currentPayload = '';
 
@@ -296,22 +298,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. Actions ---
 
-    const showResult = (payload) => {
+    const showResult = (payload, showQR = true) => {
         currentPayload = payload;
         resultSection.classList.remove('hidden');
         
-        // Clear previous QR
-        qrcodeContainer.innerHTML = '';
-        
-        // Generate new QR
-        new QRCode(qrcodeContainer, {
-            text: payload,
-            width: 256,
-            height: 256,
-            colorDark: "#1D1D1F",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
+        if (showQR) {
+            qrWrapper.classList.remove('hidden');
+            btnDownload.classList.remove('hidden');
+            // Clear previous QR
+            qrcodeContainer.innerHTML = '';
+            // Generate new QR
+            new QRCode(qrcodeContainer, {
+                text: payload,
+                width: 256,
+                height: 256,
+                colorDark: "#1D1D1F",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } else {
+            qrWrapper.classList.add('hidden');
+            btnDownload.classList.add('hidden');
+        }
 
         // Scroll to results
         resultSection.scrollIntoView({ behavior: 'smooth' });
@@ -324,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const payload = generatePayload();
-        showResult(payload);
+        showResult(payload, true);
     });
 
     btnCopyPaste.addEventListener('click', () => {
@@ -337,8 +345,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const payload = generatePayload();
-        currentPayload = payload;
         
+        // Show result section WITHOUT QR Code
+        showResult(payload, false);
+        
+        // Also copy to clipboard immediately as requested by the button action
         navigator.clipboard.writeText(payload).then(() => {
             btnCopyPaste.textContent = 'Copiado!';
             btnCopyPaste.classList.add('bg-[#32BCAD]', 'text-white');
@@ -380,6 +391,23 @@ document.addEventListener('DOMContentLoaded', () => {
             link.click();
             document.body.removeChild(link);
         }
+    });
+
+    // Reset Form
+    btnReset.addEventListener('click', () => {
+        form.reset();
+        resultSection.classList.add('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        hideError();
+        // Reset key specific attributes to default (CPF)
+        pixKeyInput.placeholder = '000.000.000-00';
+        pixKeyInput.setAttribute('inputmode', 'numeric');
+        pixKeyInput.setAttribute('pattern', '[0-9]*');
+        
+        // Reset buttons active state
+        document.querySelectorAll('.key-type-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-type="CPF"]').classList.add('active');
+        keyTypeInput.value = 'CPF';
     });
 
     // --- 4. PWA Logic ---
