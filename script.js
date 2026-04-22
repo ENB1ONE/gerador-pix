@@ -381,4 +381,70 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.removeChild(link);
         }
     });
+
+    // --- 4. PWA Logic ---
+
+    // --- 4. PWA Logic ---
+
+    let deferredPrompt;
+    const pwaModal = document.getElementById('pwa-modal');
+    const pwaInstallBtn = document.getElementById('pwa-install');
+    const pwaCancelBtn = document.getElementById('pwa-cancel');
+    const iosModal = document.getElementById('ios-modal');
+    const iosCloseBtn = document.getElementById('ios-close');
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW Registered'))
+                .catch(err => console.log('SW Registration Failed', err));
+        });
+    }
+
+    // Capture Install Prompt (Android/Chrome)
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        if (!sessionStorage.getItem('pwa-prompt-shown') && !isStandalone) {
+            setTimeout(() => {
+                pwaModal.classList.remove('hidden');
+                sessionStorage.setItem('pwa-prompt-shown', 'true');
+            }, 3000);
+        }
+    });
+
+    // Handle iOS Guide
+    if (isIOS && !isStandalone && !sessionStorage.getItem('pwa-prompt-shown')) {
+        setTimeout(() => {
+            iosModal.classList.remove('hidden');
+            sessionStorage.setItem('pwa-prompt-shown', 'true');
+        }, 3000);
+    }
+
+    pwaInstallBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+        }
+        pwaModal.classList.add('hidden');
+    });
+
+    pwaCancelBtn.addEventListener('click', () => {
+        pwaModal.classList.add('hidden');
+    });
+
+    iosCloseBtn.addEventListener('click', () => {
+        iosModal.classList.add('hidden');
+    });
+
+    if (isStandalone) {
+        pwaModal.classList.add('hidden');
+        iosModal.classList.add('hidden');
+    }
 });

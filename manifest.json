@@ -1,0 +1,17 @@
+{
+  "name": "Gerador de Pix",
+  "short_name": "Pix",
+  "description": "Gerador de QR Code Pix Minimalista",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F5F5F7",
+  "theme_color": "#32BCAD",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
