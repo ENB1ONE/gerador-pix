@@ -408,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.key-type-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('[data-type="CPF"]').classList.add('active');
         keyTypeInput.value = 'CPF';
+        updateTotal(); // Refresh the Total display
     });
 
     // --- 4. PWA Logic ---
