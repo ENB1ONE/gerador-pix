@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDownload = document.getElementById('btn-download');
     const btnCopyResult = document.getElementById('btn-copy-result');
     const copyText = document.getElementById('copy-text');
+    const keyError = document.getElementById('key-error');
 
     let currentPayload = '';
 
@@ -39,8 +40,84 @@ document.addEventListener('DOMContentLoaded', () => {
                 'RANDOM': 'Chave de 32 caracteres'
             };
             pixKeyInput.placeholder = placeholders[btn.dataset.type] || 'Insira sua chave';
+            validateKey(); // Re-validate when switching types
         });
     });
+
+    // Validation Functions
+    const validateCPF = (cpf) => {
+        cpf = cpf.replace(/\D/g, '');
+        if (cpf.length !== 11) return false;
+        if (/^(\d)\1+$/.test(cpf)) return false;
+        return true; // Basic length check for now, can add checksum if needed
+    };
+
+    const validateCNPJ = (cnpj) => {
+        cnpj = cnpj.replace(/\D/g, '');
+        if (cnpj.length !== 14) return false;
+        return true;
+    };
+
+    const validateEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const validatePhone = (phone) => {
+        const clean = phone.replace(/\D/g, '');
+        return clean.length >= 10 && clean.length <= 13;
+    };
+
+    const validateRandom = (key) => {
+        return key.length >= 32;
+    };
+
+    const validateKey = () => {
+        const type = keyTypeInput.value;
+        const value = pixKeyInput.value.trim();
+        let isValid = false;
+
+        if (!value) {
+            hideError();
+            return false;
+        }
+
+        switch (type) {
+            case 'CPF':
+                isValid = value.replace(/\D/g, '').length > 11 ? validateCNPJ(value) : validateCPF(value);
+                break;
+            case 'EMAIL':
+                isValid = validateEmail(value);
+                break;
+            case 'PHONE':
+                isValid = validatePhone(value);
+                break;
+            case 'RANDOM':
+                isValid = validateRandom(value);
+                break;
+            default:
+                isValid = value.length > 0;
+        }
+
+        if (isValid) {
+            hideError();
+        } else {
+            showError();
+        }
+
+        return isValid;
+    };
+
+    const showError = () => {
+        pixKeyInput.classList.add('error');
+        keyError.style.display = 'block';
+    };
+
+    const hideError = () => {
+        pixKeyInput.classList.remove('error');
+        keyError.style.display = 'none';
+    };
+
+    pixKeyInput.addEventListener('input', validateKey);
 
     // Currency Mask Logic
     const formatCurrency = (input) => {
@@ -187,11 +264,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
+        if (!validateKey()) {
+            pixKeyInput.focus();
+            return;
+        }
         const payload = generatePayload();
         showResult(payload);
     });
 
     btnCopyPaste.addEventListener('click', () => {
+        if (!validateKey()) {
+            pixKeyInput.focus();
+            return;
+        }
         if (!form.checkValidity()) {
             form.reportValidity();
             return;

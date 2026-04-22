@@ -52,14 +52,22 @@ body {
     outline: none;
 }
 
-.apple-input:focus {
-    border-color: var(--apple-accent);
-    background: #FFFFFF;
-    box-shadow: 0 0 0 4px rgba(50, 188, 173, 0.1);
+.apple-input.error {
+    border-color: #FF3B30; /* Apple Red */
+    background: #FFF9F9;
 }
 
-.apple-input::placeholder {
-    color: #C1C1C7;
+.apple-input.error:focus {
+    box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.1);
+}
+
+.error-message {
+    color: #FF3B30;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+    margin-left: 4px;
+    display: none;
 }
 
 /* Buttons */
