@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const placeholders = {
                 'CPF': '000.000.000-00',
                 'EMAIL': 'seu@email.com',
-                'PHONE': '+55 (11) 99999-9999', // Celular
+                'PHONE': '(99) 99999-9999', // Celular
                 'RANDOM': 'Chave de 32 caracteres'
             };
             
