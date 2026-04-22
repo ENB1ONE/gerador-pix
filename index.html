@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GERADOR DE PIX | Minimalist Pix Generator</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+    </style>
+</head>
+<body class="bg-[#F5F5F7] font-['Inter',system-ui,-apple-system,sans-serif] text-[#1D1D1F] min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <header class="w-full max-w-md flex flex-col items-center mb-8 animate-fade-in">
+        <div class="pix-logo-container mb-4">
+            <img src="logo.png" alt="Pix Logo" class="w-16 h-16 object-contain">
+        </div>
+        <h1 class="text-2xl font-semibold tracking-tight text-center">GERADOR DE PIX</h1>
+        <p class="text-sm text-[#86868B] mt-1">Simples. Seguro. Profissional.</p>
+    </header>
+
+    <main class="w-full max-w-md bg-white rounded-[24px] shadow-apple p-6 md:p-8 animate-slide-up">
+        <form id="pix-form" class="space-y-6">
+            <!-- Tipo de Chave -->
+            <div class="space-y-2">
+                <label class="text-xs font-medium text-[#86868B] uppercase tracking-wider ml-1">Tipo de Chave</label>
+                <div class="grid grid-cols-2 gap-2" id="key-type-selector">
+                    <button type="button" data-type="CPF" class="key-type-btn active">CPF/CNPJ</button>
+                    <button type="button" data-type="EMAIL" class="key-type-btn">E-mail</button>
+                    <button type="button" data-type="PHONE" class="key-type-btn">Celular</button>
+                    <button type="button" data-type="RANDOM" class="key-type-btn">Chave Aleatória</button>
+                </div>
+                <input type="hidden" id="key-type" value="CPF">
+            </div>
+
+            <!-- Chave Pix -->
+            <div class="space-y-2">
+                <label for="pix-key" class="text-xs font-medium text-[#86868B] uppercase tracking-wider ml-1">Chave Pix</label>
+                <input type="text" id="pix-key" placeholder="Insira sua chave aqui" class="apple-input w-full" required>
+            </div>
+
+            <!-- Valores -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label for="pix-value" class="text-xs font-medium text-[#86868B] uppercase tracking-wider ml-1">Valor do Pix</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#86868B] text-sm font-medium">R$</span>
+                        <input type="number" id="pix-value" step="0.01" inputmode="decimal" placeholder="0,00" class="apple-input w-full pl-10" required>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label for="pix-fee" class="text-xs font-medium text-[#86868B] uppercase tracking-wider ml-1">Taxa (opcional)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#86868B] text-sm font-medium">R$</span>
+                        <input type="number" id="pix-fee" step="0.01" inputmode="decimal" placeholder="0,00" class="apple-input w-full pl-10">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Dinâmico -->
+            <div class="bg-[#F5F5F7] rounded-2xl p-4 flex justify-between items-center transition-all duration-300">
+                <span class="text-sm font-medium text-[#1D1D1F]">Total a Receber:</span>
+                <span id="total-display" class="text-lg font-bold text-[#32BCAD]">R$ 0,00</span>
+            </div>
+
+            <!-- Identificador -->
+            <div class="space-y-2">
+                <label for="pix-identifier" class="text-xs font-medium text-[#86868B] uppercase tracking-wider ml-1">Identificador</label>
+                <input type="text" id="pix-identifier" maxlength="25" placeholder="EX: PAGAMENTO FEIJOADA (Opcional)" class="apple-input w-full uppercase">
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-col gap-3 pt-2">
+                <button type="submit" id="btn-generate" class="apple-btn-primary w-full">Gerar QR Code</button>
+                <button type="button" id="btn-copy-paste" class="apple-btn-secondary w-full">Gerar Pix Copia e Cola</button>
+            </div>
+        </form>
+
+        <!-- Resultados -->
+        <div id="result-section" class="hidden mt-8 pt-8 border-t border-[#F5F5F7] space-y-6 animate-fade-in">
+            <div class="flex flex-col items-center">
+                <div id="qrcode" class="p-4 bg-white border border-[#E8E8ED] rounded-2xl"></div>
+                <p class="text-[10px] text-[#86868B] mt-2 uppercase tracking-widest font-medium">Aponte a câmera para pagar</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button id="btn-download" class="apple-btn-secondary w-full flex items-center justify-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Baixar QR Code
+                </button>
+                <button id="btn-copy-result" class="apple-btn-secondary w-full flex items-center justify-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span id="copy-text">Copiar Pix Copia e Cola</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-8 text-center text-[10px] text-[#86868B] font-medium tracking-wide uppercase">
+        Desenvolvido com foco em Privacidade e Segurança
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+/**
+ * GERADOR DE PIX PRO - Core Logic
+ * Standards: BCB / EMV Co / BR Code
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
+    const form = document.getElementById('pix-form');
+    const keyTypeInput = document.getElementById('key-type');
+    const pixKeyInput = document.getElementById('pix-key');
+    const pixValueInput = document.getElementById('pix-value');
+    const pixFeeInput = document.getElementById('pix-fee');
+    const totalDisplay = document.getElementById('total-display');
+    const identifierInput = document.getElementById('pix-identifier');
+    const btnGenerate = document.getElementById('btn-generate');
+    const btnCopyPaste = document.getElementById('btn-copy-paste');
+    const resultSection = document.getElementById('result-section');
+    const qrcodeContainer = document.getElementById('qrcode');
+    const btnDownload = document.getElementById('btn-download');
+    const btnCopyResult = document.getElementById('btn-copy-result');
+    const copyText = document.getElementById('copy-text');
+
+    let currentPayload = '';
+
+    // --- 1. UI Logic ---
+
+    // Key Type Selector
+    document.querySelectorAll('.key-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.key-type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            keyTypeInput.value = btn.dataset.type;
+            
+            // Adjust placeholder based on type
+            const placeholders = {
+                'CPF': '000.000.000-00',
+                'EMAIL': 'seu@email.com',
+                'PHONE': '+55 (11) 99999-9999', // Celular
+                'RANDOM': 'Chave de 32 caracteres'
+            };
+            pixKeyInput.placeholder = placeholders[btn.dataset.type] || 'Insira sua chave';
+        });
+    });
+
+    // Dynamic Total Calculation
+    const updateTotal = () => {
+        const val = parseFloat(pixValueInput.value) || 0;
+        const fee = parseFloat(pixFeeInput.value) || 0;
+        const total = val + fee;
+        totalDisplay.textContent = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    pixValueInput.addEventListener('input', updateTotal);
+    pixFeeInput.addEventListener('input', updateTotal);
+
+    // --- 2. Pix Engine (BR Code / EMV Co) ---
+
+    /**
+     * Formata um campo no padrão TLV (Tag, Length, Value)
+     */
+    function formatTLV(id, value) {
+        const len = value.length.toString().padStart(2, '0');
+        return `${id}${len}${value}`;
+    }
+
+    /**
+     * Cálculo do CRC16 (Polinômio 0x1021)
+     */
+    function getCRC16(data) {
+        let crc = 0xFFFF;
+        const polynomial = 0x1021;
+
+        for (let i = 0; i < data.length; i++) {
+            let b = data.charCodeAt(i);
+            for (let j = 0; j < 8; j++) {
+                let bit = ((b >> (7 - j)) & 1) == 1;
+                let c15 = ((crc >> 15) & 1) == 1;
+                crc <<= 1;
+                if (c15 ^ bit) crc ^= polynomial;
+            }
+        }
+
+        crc &= 0xFFFF;
+        return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    /**
+     * Gera o Payload final do Pix
+     */
+    function generatePayload() {
+        const key = pixKeyInput.value.trim();
+        const value = (parseFloat(pixValueInput.value) || 0) + (parseFloat(pixFeeInput.value) || 0);
+        const identifier = identifierInput.value.trim() || '***';
+        
+        // 00: Payload Format Indicator (Fixed)
+        let payload = formatTLV('00', '01');
+
+        // 26: Merchant Account Information
+        const gui = formatTLV('00', 'br.gov.bcb.pix');
+        const keyField = formatTLV('01', key);
+        payload += formatTLV('26', gui + keyField);
+
+        // 52: Merchant Category Code
+        payload += formatTLV('52', '0000');
+
+        // 53: Transaction Currency (986 = BRL)
+        payload += formatTLV('53', '986');
+
+        // 54: Transaction Amount
+        if (value > 0) {
+            payload += formatTLV('54', value.toFixed(2));
+        }
+
+        // 58: Country Code
+        payload += formatTLV('58', 'BR');
+
+        // 59: Merchant Name
+        payload += formatTLV('59', 'RECEBEDOR');
+
+        // 60: Merchant City
+        payload += formatTLV('60', 'SAO PAULO');
+
+        // 62: Additional Data Field Template
+        const txid = formatTLV('05', identifier.replace(/\s+/g, '')); // Remove spaces for TXID
+        payload += formatTLV('62', txid);
+
+        // 63: CRC16
+        payload += '6304'; // Tag + Length header
+        payload += getCRC16(payload);
+
+        return payload;
+    }
+
+    // --- 3. Actions ---
+
+    const showResult = (payload) => {
+        currentPayload = payload;
+        resultSection.classList.remove('hidden');
+        
+        // Clear previous QR
+        qrcodeContainer.innerHTML = '';
+        
+        // Generate new QR
+        new QRCode(qrcodeContainer, {
+            text: payload,
+            width: 256,
+            height: 256,
+            colorDark: "#1D1D1F",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Scroll to results
+        resultSection.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const payload = generatePayload();
+        showResult(payload);
+    });
+
+    btnCopyPaste.addEventListener('click', () => {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        const payload = generatePayload();
+        currentPayload = payload;
+        
+        navigator.clipboard.writeText(payload).then(() => {
+            btnCopyPaste.textContent = 'Copiado!';
+            btnCopyPaste.classList.add('bg-[#32BCAD]', 'text-white');
+            setTimeout(() => {
+                btnCopyPaste.textContent = 'Gerar Pix Copia e Cola';
+                btnCopyPaste.classList.remove('bg-[#32BCAD]', 'text-white');
+            }, 2000);
+        });
+    });
+
+    // Copy from result card
+    btnCopyResult.addEventListener('click', () => {
+        navigator.clipboard.writeText(currentPayload).then(() => {
+            const originalText = copyText.textContent;
+            copyText.textContent = 'Copiado!';
+            setTimeout(() => {
+                copyText.textContent = originalText;
+            }, 2000);
+        });
+    });
+
+    // Download QR Code
+    btnDownload.addEventListener('click', () => {
+        const img = qrcodeContainer.querySelector('img');
+        const canvas = qrcodeContainer.querySelector('canvas');
+        
+        let dataUrl = '';
+        if (img && img.src) {
+            dataUrl = img.src;
+        } else if (canvas) {
+            dataUrl = canvas.toDataURL('image/png');
+        }
+
+        if (dataUrl) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `pix-qrcode-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    });
+});

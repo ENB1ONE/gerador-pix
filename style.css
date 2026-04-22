@@ -1,0 +1,139 @@
+:root {
+    --apple-bg: #F5F5F7;
+    --apple-card: #FFFFFF;
+    --apple-text: #1D1D1F;
+    --apple-secondary-text: #86868B;
+    --apple-accent: #32BCAD; /* Pix Teal */
+    --apple-accent-hover: #2ba699;
+    --apple-border: #E8E8ED;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* Base Styles */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Utilities */
+.shadow-apple {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Inputs */
+.apple-input {
+    background: #FBFBFB;
+    border: 1px solid var(--apple-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 16px;
+    color: var(--apple-text);
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.apple-input:focus {
+    border-color: var(--apple-accent);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(50, 188, 173, 0.1);
+}
+
+.apple-input::placeholder {
+    color: #C1C1C7;
+}
+
+/* Buttons */
+.key-type-btn {
+    padding: 10px;
+    border: 1px solid var(--apple-border);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--apple-secondary-text);
+    background: #FBFBFB;
+    transition: all 0.2s ease;
+    min-height: 44px;
+}
+
+.key-type-btn:hover {
+    background: #F5F5F7;
+    border-color: #D2D2D7;
+}
+
+.key-type-btn.active {
+    background: var(--apple-text);
+    color: #FFFFFF;
+    border-color: var(--apple-text);
+}
+
+.apple-btn-primary {
+    background: var(--apple-accent);
+    color: #FFFFFF;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 52px;
+}
+
+.apple-btn-primary:hover {
+    background: var(--apple-accent-hover);
+    transform: scale(1.01);
+}
+
+.apple-btn-primary:active {
+    transform: scale(0.98);
+}
+
+.apple-btn-secondary {
+    background: #F5F5F7;
+    color: var(--apple-text);
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    min-height: 52px;
+}
+
+.apple-btn-secondary:hover {
+    background: #E8E8ED;
+}
+
+.apple-btn-secondary:active {
+    background: #D2D2D7;
+}
+
+/* QR Code Container */
+#qrcode canvas, #qrcode img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+    .apple-input {
+        font-size: 16px; /* Prevents auto-zoom on iOS */
+    }
+}
