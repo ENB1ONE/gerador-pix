@@ -17,11 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultSection = document.getElementById('result-section');
     const qrcodeContainer = document.getElementById('qrcode');
     const btnDownload = document.getElementById('btn-download');
+    const btnShareQR = document.getElementById('btn-share-qr');
     const btnCopyResult = document.getElementById('btn-copy-result');
+    const btnSharePayload = document.getElementById('btn-share-payload');
     const copyText = document.getElementById('copy-text');
     const keyError = document.getElementById('key-error');
     const btnReset = document.getElementById('btn-reset');
     const qrWrapper = document.getElementById('qr-wrapper');
+    const qrActions = document.getElementById('qr-actions');
 
     let currentPayload = '';
 
@@ -316,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (showQR) {
             qrWrapper.classList.remove('hidden');
-            btnDownload.classList.remove('hidden');
+            qrActions.classList.remove('hidden');
             // Clear previous QR
             qrcodeContainer.innerHTML = '';
             // Generate new QR
@@ -330,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } else {
             qrWrapper.classList.add('hidden');
-            btnDownload.classList.add('hidden');
+            qrActions.classList.add('hidden');
         }
 
         // Scroll to results
@@ -402,6 +405,70 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+    });
+
+    // Share QR Code
+    btnShareQR.addEventListener('click', async () => {
+        const img = qrcodeContainer.querySelector('img');
+        const canvas = qrcodeContainer.querySelector('canvas');
+        
+        let dataUrl = '';
+        if (img && img.src) {
+            dataUrl = img.src;
+        } else if (canvas) {
+            dataUrl = canvas.toDataURL('image/png');
+        }
+
+        if (dataUrl) {
+            try {
+                const response = await fetch(dataUrl);
+                const blob = await response.blob();
+                const file = new File([blob], 'pix-qrcode.png', { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Meu QR Code Pix',
+                        text: 'Escaneie este QR Code para realizar o pagamento.'
+                    });
+                } else if (navigator.share) {
+                    await navigator.share({
+                        title: 'Pagamento Pix',
+                        text: currentPayload
+                    });
+                } else {
+                    alert('Compartilhamento não suportado neste navegador.');
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Erro ao compartilhar:', err);
+                }
+            }
+        }
+    });
+
+    // Share Payload (Copia e Cola)
+    btnSharePayload.addEventListener('click', async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Copia e Cola Pix',
+                    text: currentPayload
+                });
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Erro ao compartilhar:', err);
+                }
+            }
+        } else {
+            navigator.clipboard.writeText(currentPayload).then(() => {
+                const originalText = btnSharePayload.textContent;
+                btnSharePayload.textContent = 'Copiado!';
+                setTimeout(() => {
+                    btnSharePayload.textContent = originalText;
+                }, 2000);
+            });
         }
     });
 
